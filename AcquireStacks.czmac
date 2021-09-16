@@ -6,179 +6,28 @@
   <Text># Acquire a stack of images from positions recorded on a
 # large tiled image
 
+# Experiment files used:
+# AcquireStacksTileTL - Used to create a tiled image with transmitted light
+# AcquireStacksFocusRL - Used to focus on the surface and take the reflected image
+# AcquireStacksZStackTL - Used to take and save the Z stacks of transmitted light
+
+# Processing settings files used:
+# C1Z1.czips - Exports the single reflected light image
+# C2AllZ.czips - Exports all the transmitted light image
+
 import os
 import re
 import shutil
 
-default_stack_size = 3
-default_focus_step = 10.0
-image_intensity = 9000.0
-autoexpose_attempts = 30
-
-def switch_reflector(reflector):
-    Zen.Devices.Reflector.TargetPosition = reflector
-    Zen.Devices.Reflector.Apply()
-
-def set_hardware(component, parameter, setting):
-    hs = ZenHardwareSetting()
-    hs.SetParameter(component, parameter, setting)
-    Zen.Devices.ApplyHardwareSetting(hs)
-
-def lamp_on(lamp_name):
-    set_hardware('MTBRLTLSwitch', 'PositionName', 'RLTLSwitch.'+lamp_name)
-    lamp = Zen.Devices.GetLampByName(lamp_name)
-    lamp.TargetMode = ZenLampMode.Set3200K
-    lamp.Apply()
-
-def lamp_off(lamp_name):
-    lamp = Zen.Devices.GetLampByName(lamp_name)
-    lamp.TargetMode = ZenLampMode.Standby
-    lamp.Apply()
-
-def switch_to_transmitted_light():
-    lamp_off('RL')
-    lamp_on('TL')
-
-def switch_to_reflected_light():
-    lamp_off('TL')
-    lamp_on('RL')
-    set_hardware('MTBRLShutter', 'IsClosed', False)
-    set_hardware('MTBRLFieldStop', 'Position', 100.0)
-    set_hardware('MTBRLApertureStop', 'Position', 100.0)
-
-def get_intensity(image):
-    channel = image.Metadata.GetChannelName(0)
-    ias = ZenImageAnalysisSetting(ZenAnalysisSettingType.WholeImage)
-    ias.AddRegionClassPair('all', 1, 'ch', 2, channel)
-    all = ias.GetRegionsClass('all')
-    all.AddFeature(ZenRegionsFeaturesIntensity.RegionsIntensityMean, channel)
-    Zen.Analyzing.ResetAnalysisResult(image)
-    Zen.Analyzing.Analyze(image, ias)
-    ftable = Zen.Analyzing.CreateRegionsTable(image)
-    return ftable.GetValue(0, 0)
-
-def set_exposure(target_value=image_intensity):
-    # If the current exposure time is obnoxiously long,
-    # we will wait this time for the first iteration and
-    # only gradually reach our goal, so we will start from
-    # no longer than 2 seconds.
-    if 2000 &lt; Zen.Acquisition.ActiveCamera.ExposureTime:
-        Zen.Acquisition.ActiveCamera.ExposureTime = 2000
-    image = Zen.Acquisition.StartLive()
-    lowest = target_value * 0.9
-    highest = target_value * 1.1
-    v = get_intensity(image)
-    attempts = autoexpose_attempts
-    while v &lt; lowest or highest &lt; v:
-        attempts -= 1
-        if attempts == 0:
-            return False
-        et = Zen.Acquisition.ActiveCamera.ExposureTime
-        if v &lt; 100:
-            # too dark, just bump it up 50ms
-            new_et = et + 50.0
-        elif 15000 &lt; v:
-            # too light, reduce by 40%
-            new_et = et * 0.6
-        else:
-            new_et = et * target_value / v
-        Zen.Acquisition.ActiveCamera.ExposureTime = new_et
-        Zen.Application.Wait(new_et)
-        v = get_intensity(image)
-    return True
-
-def autofocus(sampling=ZenSoftwareAutofocusSampling.Coarse, set_lighting=True):
-    if set_lighting:
-        switch_to_transmitted_light()
-        set_exposure()
-    exp = ZenExperiment('POIs on tiles')
-    exp.SetAutofocusParameters(
-        sampling=sampling,
-        searchStrategy="Smart",
-        referenceChannelName=""
-    )
-    Zen.Acquisition.FindAutofocus(exp)
-    exp.Close()
-
-def save_image(image, folder, name):
-    fname = os.path.join(folder, name)
-    image.Save(fname, 80)
-    os.unlink(fname + '_metadata.xml')
-    # This version does not seem to work:
-    #setting = Zen.Processing.Utilities.Settings.SingleFileExportSetting(ZenExportFileType.JPEG)
-    #setting.FileName = fname
-    #Zen.Processing.Utilities.ExportSingleFile(image, setting)
-
-def acquire_image_stack(folder, start_focus, focus_step, stack_size, reflector):
-    et = Zen.Acquisition.ActiveCamera.ExposureTime
-    switch_reflector(reflector)
-    switch_to_transmitted_light()
-    for n in range(0, stack_size):
-        f = start_focus + n * focus_step
-        Zen.Devices.Focus.MoveTo(f)
-        image = Zen.Acquisition.AcquireImage(False)
-        # Workaround for a problem where sometimes the
-        # camera's exposure setting gets reset
-        Zen.Acquisition.ActiveCamera.ExposureTime = et - 0.1
-        Zen.Acquisition.ActiveCamera.ExposureTime = et
-        save_image(image, folder, 'Stack-{0}.jpg'.format(n))
-
-def acquire_reflected_image(folder, focus, reflector):
-    switch_reflector(reflector)
-    switch_to_reflected_light()
-    image = Zen.Acquisition.AcquireImage(False)
-    # Exposure time can be long so wait for the image to appear
-    Zen.Application.Wait(Zen.Acquisition.ActiveCamera.ExposureTime * 2)
-    save_image(image, folder, 'ReflStackFlat.jpg')
-
 def get_parameters():
     window = Zen.Windows.CreateWindow('Acquire image stacks')
     window.AddFolderBrowser('output_folder','Output folder')
-    c = Zen.Devices.Reflector.ItemsCount
-    rs = {}
-    ks = []
-    refl_default = 1
-    trans_default = 1
-    for i in range(1,c+1):
-        r = Zen.Devices.Reflector.GetNameByPosition(i)
-        if r is None:
-            rs['None'] = i
-            trans_default = len(ks)
-            ks.append('None')
-        else:
-            rs[r] = i
-            if 'bright' in r.ToLower():
-                refl_default = len(ks)
-            ks.append(r)
-    window.AddDropDown('refl_reflector', 'Reflector for reflected light', ks, refl_default)
-    window.AddDropDown('trans_reflector', 'Reflector for transmitted light', ks, trans_default)
-    window.AddIntegerRange(
-        'stack_size',
-        'How many (TL) images per stack?',
-        default_stack_size,
-        1,
-        100
-    )
-    window.AddDoubleRange(
-        'focus_step',
-        'μm between focus values?',
-        default_focus_step,
-        0.1,
-        100.0
-    )
     result = show(window)
     r = {}
     for k in [
         'output_folder',
-        'stack_size',
-        'focus_step'
     ]:
         r[k] = result.GetValue(k)
-    for k in [
-        'refl_reflector',
-        'trans_reflector'
-    ]:
-        r[k] = rs[result.GetValue(k)]
     return r
 
 def set_magnification(suggestion):
@@ -199,7 +48,7 @@ def set_magnification(suggestion):
 
 def get_image():
     doc = Zen.Application.ActiveDocument
-    if 1 &lt; int(doc.Metadata.TilesCount):
+    if doc and 1 &lt; int(doc.Metadata.TilesCount):
         w = Zen.Windows.CreateWindow('Use current image?')
         rs = {
             'Yes, I want to use this image as the map': True,
@@ -214,11 +63,8 @@ def get_image():
         if rs[show(w).GetValue('current')]:
             return doc
     set_magnification(10)
-    autofocus(ZenSoftwareAutofocusSampling.Fine)
-    switch_to_transmitted_light()
-    set_exposure()
-    exp = Zen.Acquisition.Experiments.GetByName("POIs on tiles.czexp")
-    Zen.Acquisition.StartLive(exp)
+    exp = Zen.Acquisition.Experiments.GetByName("AcquireStacksTileTL")
+    Zen.Acquisition.StartLive()
     Zen.Application.Pause('Find a corner and click Continue')
     x1 = Zen.Devices.Stage.ActualPositionX
     y1 = Zen.Devices.Stage.ActualPositionY
@@ -233,7 +79,9 @@ def get_image():
     w = x2 - x1
     h = y2 - y1
     exp.AddRectangleTileRegion(0, x1 + w/2, y1 + h/2, w, h, z)
-    return Zen.Acquisition.Execute(exp)
+    tiles = Zen.Acquisition.Execute(exp)
+    exp.Close()
+    return tiles
 
 def get_rois(doc):
     return filter(lambda g: g.Category == ZenGraphicCategory.Rectangle, doc.Graphics)
@@ -317,32 +165,40 @@ def get_initial_count(folder):
     return delete_existing_if_user_wants(grain_folders, max_existing)
 
 def move_to_roi(doc, roi):
+    """
+    Move stage to the position of the ROI `roi` from the document `doc`
+    """
     scale = doc.Scaling
     origin = doc.GetPositionLeftTop()
     x = roi.Bounds.X + roi.Bounds.Width/2
     y = roi.Bounds.Y + roi.Bounds.Height/2
-    Zen.Devices.Stage.MoveTo(origin.X + x * scale.X, origin.Y + y * scale.Y)
+    sx = origin.X + x * scale.X
+    sy = origin.Y + y * scale.Y
+    Zen.Devices.Stage.MoveTo(sx, sy)
 
-def acquire_for_all_rois(doc, focus_step, stack_size, output_folder, rr, tr, count):
+def acquire_roi(output_folder, sub_folder):
+    focus = Zen.Devices.Focus.ActualPosition
+    exp_rl = Zen.Acquisition.Experiments.GetByName("AcquireStacksFocusRL")
+    Zen.Acquisition.FindAutofocus(exp_rl)
+    exp_rl.Close()
+    exp_z = Zen.Acquisition.Experiments.GetByName("AcquireStacksZStack")
+    stack = Zen.Acquisition.Execute(exp_z)
+    exp_z.Close()
+    Zen.Devices.Focus.MoveTo(focus)
+    ps = Zen.Processing.Utilities.Settings.SingleFileExportSetting()
+    for setting in ['C1Z1.czips', 'C2AllZ.czips']:
+        ps.Load(setting)
+        ps.DestinationFolder = output_folder
+        ps.Prefix = sub_folder
+        Zen.Processing.Utilities.ExportSingleFile(stack, ps)
+    stack.Close()
+
+def acquire_for_all_rois(doc, output_folder, count):
     move_to_roi(doc, get_rois(doc)[0])
     set_magnification(20)
-    switch_reflector(rr)
-    switch_to_reflected_light()
-    set_exposure()
-    exposure_refl = Zen.Acquisition.ActiveCamera.ExposureTime
-    autofocus(set_lighting=False)
-    focus = doc.Metadata.FocusPositionMicron
-    switch_reflector(tr)
-    switch_to_transmitted_light()
-    set_exposure()
-    exposure_trans = Zen.Acquisition.ActiveCamera.ExposureTime
     for roi in get_rois(doc):
         move_to_roi(doc, roi)
-        folder = output_folder + "\\Grain{0:02d}".format(count)
-        Zen.Acquisition.ActiveCamera.ExposureTime = exposure_refl
-        acquire_reflected_image(folder, focus, rr)
-        Zen.Acquisition.ActiveCamera.ExposureTime = exposure_trans
-        acquire_image_stack(folder, focus, focus_step, stack_size, tr)
+        acquire_roi(output_folder, "Grain{0:02d}".format(count))
         count += 1
 
 try:
@@ -358,21 +214,15 @@ try:
     count = get_initial_count(params['output_folder'])
     # 7) Ask the user to switch to the higher magnification
     # 8) Acquire stacks
-    acquire_for_all_rois(
-        doc,
-        params['focus_step'],
-        params['stack_size'],
-        params['output_folder'],
-        params['refl_reflector'],
-        params['trans_reflector'],
-        count
-    )
+    show_live()
+    acquire_for_all_rois(doc, params['output_folder'], count)
+    Zen.Application.Pause("Done!")
 except UserCancelledException as uce:
     Zen.Application.Pause(uce.message)
 </Text>
   <Author></Author>
   <Description></Description>
   <Keywords></Keywords>
-  <Row>59</Row>
-  <Column>32</Column>
+  <Row>182</Row>
+  <Column>1</Column>
 </Script>

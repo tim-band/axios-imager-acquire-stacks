@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<HardwareSetting Name="Transmitted.czhws">
+  <ParameterCollection Id="MTBTLHalogenLamp">
+    <LampMode Status="Valid" IsActivated="true">Set3200K</LampMode>
+    <Intensity Status="Valid" IsActivated="true">81.286549707602</Intensity>
+  </ParameterCollection>
+  <ParameterCollection Id="MTBRLHalogenLamp">
+    <LampMode Status="Valid" IsActivated="true">Standby</LampMode>
+    <Intensity Status="Valid" IsActivated="true">0</Intensity>
+  </ParameterCollection>
+  <ParameterCollection Id="MTBRLShutter">
+    <IsClosed Status="Valid" IsActivated="true">true</IsClosed>
+  </ParameterCollection>
+  <ParameterCollection Id="MTBReflectorChanger">
+    <PositionName Status="Valid" IsActivated="true">Reflector.none</PositionName>
+    <Position Status="Valid" IsActivated="true">5</Position>
+  </ParameterCollection>
+  <ParameterCollection Id="MTBRLTLSwitch">
+    <PositionName Status="Valid" IsActivated="true">RLTLSwitch.TL</PositionName>
+    <Position Status="Valid" IsActivated="true">1</Position>
+  </ParameterCollection>
+</HardwareSetting>

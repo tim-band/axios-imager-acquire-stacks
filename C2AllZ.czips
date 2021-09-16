@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProcessingParameters Function="SingleFileExport">
+  <FunctionParameters Function="SingleFileExport">
+    <DestFolder>d:\zeiss\Documents\</DestFolder>
+    <SubsetSelectionMode>UseSubsetString</SubsetSelectionMode>
+    <SubSetString>C(2)</SubSetString>
+    <MultichannelMode>DistinctChannels</MultichannelMode>
+    <ProcessingModeFlags>WithDisplaySettings, BurnInAnnotations</ProcessingModeFlags>
+    <MCSelectionMode>SubsetDefinition</MCSelectionMode>
+    <UseChannelNames>true</UseChannelNames>
+    <BurnInDataZone>false</BurnInDataZone>
+    <GraphicElementsZoom>1</GraphicElementsZoom>
+    <ImageEncoderClsid>8f588784-b5f9-4021-95ad-e81c680b629e</ImageEncoderClsid>
+    <ExportImageWriterOptions>
+      <TryToOverwrite>false</TryToOverwrite>
+      <ShiftPixel>true</ShiftPixel>
+      <PixelShift>0</PixelShift>
+      <CustomExportNamingGeneratorKey></CustomExportNamingGeneratorKey>
+      <Quality>95</Quality>
+    </ExportImageWriterOptions>
+    <PanOption>All</PanOption>
+    <TileMode>Retile</TileMode>
+    <RetileSettings>
+      <TileCountX>1</TileCountX>
+      <TileCountY>1</TileCountY>
+      <OverlapXPercent>0</OverlapXPercent>
+      <OverlapYPercent>0</OverlapYPercent>
+      <MaxTileCountX>500</MaxTileCountX>
+      <MaxTileCountY>500</MaxTileCountY>
+    </RetileSettings>
+    <Zoom>1</Zoom>
+    <GenXMLFiles>false</GenXMLFiles>
+    <CreateSubFolder>true</CreateSubFolder>
+    <CreateZipArchive>false</CreateZipArchive>
+    <Prefix>Experiment-119</Prefix>
+    <CheckValidAccessors>false</CheckValidAccessors>
+    <Extension></Extension>
+  </FunctionParameters>
+</ProcessingParameters>
