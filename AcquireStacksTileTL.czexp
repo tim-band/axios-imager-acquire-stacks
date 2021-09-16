@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <HardwareExperiment Version="1.2">
   <RunMode>PreventFocusRestoreAfterExperiment,PreventStageXYRestoreAfterExperiment,PreventLightAndContrastManagerDeactivation</RunMode>
-  <BeforeHardwareSetting>Transmitted</BeforeHardwareSetting>
+  <BeforeHardwareSetting></BeforeHardwareSetting>
   <AfterHardwareSetting></AfterHardwareSetting>
   <ExperimentBlockIndex>0</ExperimentBlockIndex>
   <IsSegmented>false</IsSegmented>
@@ -363,7 +363,7 @@
             </Calibration>
             <IsHolderEnabled>true</IsHolderEnabled>
             <HolderNumber />
-            <CorrelativeSessionId>09bb1311-c919-46e3-a1ee-cdbbc245367d</CorrelativeSessionId>
+            <CorrelativeSessionId>6dc3723c-0266-452e-ae70-6b92d558a1cf</CorrelativeSessionId>
           </HolderDocument>
           <SubDimensionSetups />
         </CorrelativeSetup>
@@ -479,7 +479,7 @@
           <BeforeHardwareSetting></BeforeHardwareSetting>
           <AfterHardwareSetting></AfterHardwareSetting>
         </BleachingSetup>
-        <DynamicsSetup IsActivated="false" GraphicScale="1" Id="637666231853677323" />
+        <DynamicsSetup IsActivated="false" GraphicScale="1" Id="637673118468470890" />
         <ExperimentModifierRulesSetup IsActivated="false">
           <Flags>
             <RunMode></RunMode>
@@ -693,7 +693,4 @@
     <Actions />
   </ExperimentFeedback>
   <AdditionalSettings />
-  <Metadata>
-    <ExperimentDuration></ExperimentDuration>
-  </Metadata>
 </HardwareExperiment>

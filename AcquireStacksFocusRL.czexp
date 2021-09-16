@@ -361,7 +361,7 @@
             </Calibration>
             <IsHolderEnabled>true</IsHolderEnabled>
             <HolderNumber />
-            <CorrelativeSessionId>7860b494-f8fb-4487-b88a-a4f95e007707</CorrelativeSessionId>
+            <CorrelativeSessionId>8495101b-b310-48d1-a5c7-905e75e45689</CorrelativeSessionId>
           </HolderDocument>
           <SubDimensionSetups />
         </CorrelativeSetup>
@@ -492,7 +492,7 @@
           <RepetitionSettingsMode>Standard</RepetitionSettingsMode>
           <FocusStrategy IsActivated="true">
             <StrategyMode>SoftwareAutofocus</StrategyMode>
-            <ReferenceChannelId>637666231721426409</ReferenceChannelId>
+            <ReferenceChannelId>637667021957572303</ReferenceChannelId>
             <FixedZPosition>0</FixedZPosition>
             <UseZPositionFromTilesSetup>true</UseZPositionFromTilesSetup>
             <ExecutionInTileRegionMode>CenterOfRegion</ExecutionInTileRegionMode>

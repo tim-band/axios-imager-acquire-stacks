@@ -16,6 +16,7 @@
 # C2AllZ.czips - Exports all the transmitted light image
 
 import os
+import random
 import re
 import shutil
 
@@ -45,6 +46,12 @@ def set_magnification(suggestion):
                 suggestion_text
             )
         )
+
+def discard_changes(e):
+    dummy_name = 'dummy{0:04d}'.format(random.randint(0,9999))
+    e.SaveAs(dummy_name)
+    e.Delete()
+    e.Close()
 
 def get_image():
     doc = Zen.Application.ActiveDocument
@@ -80,7 +87,7 @@ def get_image():
     h = y2 - y1
     exp.AddRectangleTileRegion(0, x1 + w/2, y1 + h/2, w, h, z)
     tiles = Zen.Acquisition.Execute(exp)
-    exp.Close()
+    discard_changes(exp)
     return tiles
 
 def get_rois(doc):
@@ -196,6 +203,8 @@ def acquire_roi(output_folder, sub_folder):
 def acquire_for_all_rois(doc, output_folder, count):
     move_to_roi(doc, get_rois(doc)[0])
     set_magnification(20)
+    exp_rl = Zen.Acquisition.Experiments.GetByName("AcquireStacksCoarseFocusRL")
+    Zen.Acquisition.FindAutofocus(exp_rl)
     for roi in get_rois(doc):
         move_to_roi(doc, roi)
         acquire_roi(output_folder, "Grain{0:02d}".format(count))
@@ -214,7 +223,6 @@ try:
     count = get_initial_count(params['output_folder'])
     # 7) Ask the user to switch to the higher magnification
     # 8) Acquire stacks
-    show_live()
     acquire_for_all_rois(doc, params['output_folder'], count)
     Zen.Application.Pause("Done!")
 except UserCancelledException as uce:
@@ -223,6 +231,6 @@ except UserCancelledException as uce:
   <Author></Author>
   <Description></Description>
   <Keywords></Keywords>
-  <Row>182</Row>
-  <Column>1</Column>
+  <Row>68</Row>
+  <Column>69</Column>
 </Script>
